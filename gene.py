@@ -1,19 +1,28 @@
-from chromosome import Chromosome
-
 class Gene:
-    def __init__(self, connections: list[Chromosome]):
+    def __init__(self,
+                 in_node: int,
+                 out_node: int,
+                 weight: float, active: bool,
+                 innov: int):
         """
-        Gene class for the connection between two nodes
+        A connection between two nodes in a neural network.
         Parameters:
-        connections (list[Connection]): List of connections
+        ===========
+        - in_node (int): The index of the input node.
+        - out_node (int): The index of the output node.
+        - weight (float): The weight of the connection.
+        - active (bool): Whether the connection is active or not.
+        - innov (int): The innovation number of the connection.
         """
-        self.connections = connections
-        self.fitness = 0
-        self.adjusted_fitness = 0
+
+        self.in_node = in_node
+        self.out_node = out_node
+        self.weight = weight
+        self.active = active
+        self.innov = innov
 
     def __str__(self):
-        connections = '\n'.join([str(connection) for connection in self.connections])
-        return f'Gene:\n{connections}'
+        return f"Connection{'' if self.active else '(X)'}: {self.in_node} -> {self.out_node} ({self.weight=} {self.innov=})"
 
     def __repr__(self):
-        return self.__str__()
+        return str(self)
