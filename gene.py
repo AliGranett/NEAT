@@ -22,7 +22,7 @@ class Gene:
         self.innov = innov
 
     def __str__(self):
-        return f"Connection{'' if self.active else '(X)'}: {self.in_node} -> {self.out_node} ({self.weight=} {self.innov=})"
+        return f"Connection{'' if self.active else '(X)'}: {self.in_node} --- w = {self.weight:.2f}  --> {self.out_node} (innov={self.innov})"
 
     def __repr__(self):
         return str(self)

@@ -2,6 +2,8 @@ from gene import Gene
 import numpy as np
 import requests
 import time
+import torch
+import torch.nn as nn
 
 class Chromosome:
     def __init__(self, connections: list[Gene] = None, num_inputs: int = None, num_outputs: int = None):
@@ -32,73 +34,43 @@ class Chromosome:
             self.nodes = set(range(1, num_inputs + num_outputs + 1))  # Input + Output node IDs
             self.initialize_connections()
         
-            self.graph = self.dot_to_ascii(self.to_dot())
-
-
-    def to_dot(self):
-        dot_str = "digraph G {\n"
-        dot_str += "    rankdir=LR;\n"  # Set graph direction left to right
-        dot_str += "    node [shape=circle, style=filled];\n"
-        
-        # Input Nodes
-        dot_str += "    subgraph cluster_input {\n"
-        dot_str += "        node [color=lightblue];\n"
-        for i in range(1, self.num_inputs + 1):
-            dot_str += f"        {i} [label=\"Input {i}\"];\n"
-        dot_str += "        label = \"Inputs\";\n"
-        dot_str += "    }\n"
-        
-        # Output Nodes
-        dot_str += "    subgraph cluster_output {\n"
-        dot_str += "        node [color=lightcoral];\n"
-        for i in range(self.num_inputs + 1, self.num_inputs + self.num_outputs + 1):
-            dot_str += f"        {i} [label=\"Output {i-self.num_inputs}\"];\n"
-        dot_str += "        label = \"Outputs\";\n"
-        dot_str += "    }\n"
-
-        # Assuming hidden nodes might exist, identify and add them
-        all_nodes = {gene.in_node for gene in self.connections} | {gene.out_node for gene in self.connections}
-        hidden_nodes = all_nodes - set(range(1, self.num_inputs + self.num_outputs + 1))
-        for node in hidden_nodes:
-            dot_str += f"    {node} [label=\"Hidden {node}\", color=gray];\n"
-
-        # Connections
-        for gene in self.connections:
-            if gene.active:
-                dot_str += f"    {gene.in_node} -> {gene.out_node} [label=\" {gene.weight:.2f}\"];\n"
-        
-        dot_str += "}\n"
-        return dot_str
-    
-    def dot_to_ascii(self, dot: str, fancy: bool = True):
-
-        url = 'https://dot-to-ascii.ggerganov.com/dot-to-ascii.php'
-        boxart = 0
-
-        # use nice box drawing char instead of + , | , -
-        if fancy:
-            boxart = 1
-
-        params = {
-            'boxart': boxart,
-            'src': dot,
-        }
-        time.sleep(0.2) # Sleep for 0.2 seconds to avoid rate limiting
-        response = requests.get(url, params=params).text
-
-        if response == '':
-            raise SyntaxError('DOT string is not formatted correctly')
-
-        return response
+        self.graph = '\n'.join([str(connection) for connection in self.connections])
+        self.build_network()
     
     def __str__(self):
-        connections = '\n'.join([str(connection) for connection in self.connections])
-
         return f"Chromosome:\nFitness: {self.fitness}\n{self.graph}"
 
     def __repr__(self):
         return self.__str__()
-    
+
+    def build_network(self):
+        """
+        Build the network from the connections
+        """
+        # Create a dictionary of nodes
+        node_set = set()
+        for gene in self.connections:
+            if gene.active:
+                node_set.update([gene.in_node, gene.out_node])
+
+        # Prepare network structure
+        network_structure = {node: [] for node in node_set}
+        for gene in self.connections:
+            if gene.active:
+                network_structure[gene.in_node].append(gene)
+
+        # Assuming a simple feedforward network for demonstration purposes
+        # For each node, create a module (if necessary, considering its type and connections)
+        modules = nn.ModuleDict()
+        for node in node_set:
+            # This example assumes a simple structure; customize as needed
+            for gene in network_structure.get(node, []):
+                modules[f'{gene.in_node}->{gene.out_node}'] = nn.Linear(1, 1, bias=False)  # Simplified
+                modules[f'{gene.in_node}->{gene.out_node}'].weight.data.fill_(gene.weight)
+
+        # Store the modules for later use in the forward pass
+        self.network = modules
+
     def initialize_connections(self):
         """
         Initialize the connections with random connections
