@@ -1,9 +1,13 @@
+import torch.nn as nn
+
+
 class Gene:
     def __init__(self,
                  in_node: int,
                  out_node: int,
                  weight: float, active: bool,
-                 innov: int):
+                 innov: int,
+                 out_activation: nn.Module = nn.Identity()):
         """
         A connection between two nodes in a neural network.
         Parameters:
@@ -13,6 +17,7 @@ class Gene:
         - weight (float): The weight of the connection.
         - active (bool): Whether the connection is active or not.
         - innov (int): The innovation number of the connection.
+        - out_activation (nn.Module): The activation function of the output node. Default is nn.Identity().
         """
 
         self.in_node = in_node
@@ -20,9 +25,17 @@ class Gene:
         self.weight = weight
         self.active = active
         self.innov = innov
+        self.out_activation = out_activation
 
     def __str__(self):
-        return f"Connection{'' if self.active else '(X)'}: {self.in_node} --- w = {self.weight:.2f}  --> {self.out_node} (innov={self.innov})"
+        return "Connection: {} {} --- w = {:.2f}  --> {} (innov={})" \
+            .format(self.active,
+                    self.in_node,
+                    self.weight,
+                    self.out_node,
+                    self.innov)
+    # return f"Connection{'' if self.active else '(X)'}: " + \
+    #    f"{self.in_node} --- w = {self.weight:.2f}  --> {self.out_node} (innov={self.innov})"
 
     def __repr__(self):
         return str(self)
