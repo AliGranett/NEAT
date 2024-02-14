@@ -8,9 +8,7 @@ import torch.nn as nn
 
 class Chromosome:
     def __init__(self,
-                 connections: list[Gene] = None,
-                 nodes_in: int = None,
-                 nodes_out: int = None):
+                 connections: list[Gene] = None, nodes_in: int = None, nodes_out: int = None):
         """
         Gene class for the connection between two nodes
         Parameters:
@@ -30,8 +28,8 @@ class Chromosome:
             self.nodes_in = nodes_in if nodes_in is not None else  \
                 max([gene.in_node for gene in connections if gene.in_node <= nodes_in])
             self.nodes_out = nodes_out if nodes_out is not None else \
-                max([gene.out_node for gene in connections if gene.out_node >
-                    nodes_in]) - self.nodes_in
+                max([gene.out_node for gene in connections if gene.out_node > nodes_in]) \
+                - self.nodes_in
         else:
             # Initialize with specified input/output sizes and random connections
             assert nodes_in is not None and nodes_out is not None, \
@@ -75,17 +73,19 @@ class Chromosome:
                 network_structure[gene.in_node].append(gene)
 
         # Assuming a simple feedforward network for demonstration purposes
-        # For each node, create a module (if necessary,
-        # considering its type and connections)
+        # For each node, create a module (if necessary, considering its type and connections)
         modules = nn.ModuleDict()
         for node in node_set:
             # This example assumes a simple structure; customize as needed
             for gene in network_structure.get(node, []):
                 modules[f'{gene.in_node}->{gene.out_node}'] = \
-                    nn.Sigmoid(1, 1, bias=False)
+                    nn.Linear(1, 1, bias=False)
                 modules[f'{gene.in_node}->{gene.out_node}'].weight \
                     .data.fill_(gene.weight)
-
+                modules[f'{gene.in_node}->{gene.out_node}'] = nn.Sequential(
+                    modules[f'{gene.in_node}->{gene.out_node}'],
+                    gene.out_activation
+                )
         # Store the modules for later use in the forward pass
         self.network = modules
 
