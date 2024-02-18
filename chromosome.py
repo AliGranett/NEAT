@@ -1,11 +1,11 @@
-from gene import Gene
+from gene import Connection
 import numpy as np
 import torch
 import torch.nn as nn
 
 
 class Chromosome:
-    def __init__(self, connections: list[Gene] = None, nodes_in: int = None, nodes_out: int = None):
+    def __init__(self, connections: list[Connection] = None, nodes_in: int = None, nodes_out: int = None):
         """
         Gene class for the connection between two nodes
         Parameters:
@@ -95,4 +95,4 @@ class Chromosome:
                 if np.random.rand() < 0.5:
                     # Randomly initialize the connection
                     self.connections.append(
-                        Gene(i + 1, j + 1, np.random.rand(), True, len(self.connections) + 1))
+                        Connection(i + 1, j + 1, np.random.rand(), True, len(self.connections) + 1))
