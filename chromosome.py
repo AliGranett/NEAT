@@ -1,14 +1,11 @@
 from gene import Gene
 import numpy as np
-# import requests
-# import time
 import torch
 import torch.nn as nn
 
 
 class Chromosome:
-    def __init__(self,
-                 connections: list[Gene] = None, nodes_in: int = None, nodes_out: int = None):
+    def __init__(self, connections: list[Gene] = None, nodes_in: int = None, nodes_out: int = None):
         """
         Gene class for the connection between two nodes
         Parameters:
