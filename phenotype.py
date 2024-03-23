@@ -19,7 +19,6 @@ class Hyperparameters(object):
             'bias': 1.0
         })
         self.default_activation = kwargs.get('default_activation', activations.sigmoid)
-
         self.max_fitness = kwargs.get('max_fitness', float('inf'))
         self.max_generations = kwargs.get('max_generations', float('inf'))
         self.max_fitness_history = kwargs.get('max_fitness_history', 30)

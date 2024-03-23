@@ -1,18 +1,20 @@
 import math
+import activations
 
 input_size = 2
 output_size = 1
 population = 150
-max_generations = 100
-
-fitness_threshold = 3.9
+max_generations = float('inf')
+fitness_threshold = 3.9 / 4
+activation_function = activations.sigmoid
+runs = 5
 
 def fitness(expected, output):
     """Calculates the similarity score between expected and output."""
-    s = 0
-    for i in range(4):
-        s += (expected[i] - output[i])**2
-    return 1/(1 + math.sqrt(s))
+    s = sum(abs(e - o) for e, o in zip(expected, output))
+    dist = 4 - s
+    dist = dist**2
+    return dist
 
 def evaluate(genome):
     """Evaluates the current genome."""
