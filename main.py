@@ -28,11 +28,12 @@ if __name__ == '__main__':
         sim_xor.display_results()
         results = sim_xor.display_best_network_structure()
         metrics.append(results)
-        num_hidden, active_connections, generations_to_solution = results
-        print(f"Run {i+1} complete | {num_hidden} hidden nodes, {active_connections} active connections, {generations_to_solution} generations to solution | {time.time() - start:.2f} seconds elapsed.")
+        num_hidden, active_connections, generations_to_solution, best_fitness = results
+        print(f"Run {i+1} complete | Best accuracy: {round(best_fitness*100, 2)}%, {num_hidden} hidden nodes, {active_connections} active connections, {generations_to_solution} generations to solution | {time.time() - start:.2f} seconds elapsed.")
 
-    num_hidden, active_connections, generations_to_solution = zip(*metrics)
-    df = pd.DataFrame(metrics, columns=["num_hidden", "active_connections", "generations_to_solution"])
+    df = pd.DataFrame(metrics, columns=["num_hidden", "active_connections", "generations_to_solution", "best_fitness"])
+    df['best_fitness'] = df['best_fitness'] * 100
+    print("\nSummary:")
     print(df.describe())
     end = time.time() - start
     print(f"Time took: {end:,} seconds.")

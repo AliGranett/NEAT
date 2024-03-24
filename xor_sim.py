@@ -3,10 +3,21 @@ import phenotype
 
 def fitness(expected, output):
     """Calculates the similarity score between expected and output."""
-    s = 0
-    for i in range(4):
-        s += (expected[i] - output[i])**2
-    return 1/(1 + math.sqrt(s))
+    
+    total_error = sum(abs(e - o) for e, o in zip(expected, output))
+    
+    # Subtracting the total error from 4
+    fitness_value = 4 - total_error
+    
+    # Squaring the result to disproportionately reward closer solutions
+    fitness_score = fitness_value**2
+    
+    return fitness_score
+
+    # s = 0
+    # for i in range(4):
+    #     s += (expected[i] - output[i])**2
+    # return 1/(1 + math.sqrt(s))
 
 def evaluate(genome):
     """Evaluates the current genome."""

@@ -93,4 +93,4 @@ class Simulation:
             for k in sorted(graph):
                 print(f"{k} -> {graph[k]}")
 
-        return num_hidden, num_active_connections, self.elapsed_generations
+        return num_hidden, num_active_connections, self.elapsed_generations, best._fitness
