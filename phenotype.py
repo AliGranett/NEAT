@@ -35,6 +35,9 @@ class Hyperparameters(object):
             'bias_perturb': 0.3,
             'bias_set': 0.1
         })
+        self.interspecies_mating = kwargs.get('interspecies_mating', 0.0)
+        self.patience = kwargs.get('patience', float('inf'))
+        self.champion_population_threshold = kwargs.get('champion_threshold', 0)
 
 class Specie(object):
     """A specie represents a set of genomes whose genomic distances 
@@ -97,6 +100,18 @@ class Specie(object):
         avg = sum(self._fitness_history) / n
         return avg > self._fitness_history[0] or n < self._max_fitness_history
 
+    def is_stagnant(self, patience):
+        """Determine if a species is stagnant based on a lack of fitness improvement."""
+        # Check if there's enough history to evaluate stagnation
+        if len(self._fitness_history) <= patience:
+            return False  # Not enough history to consider stagnation
+
+        # Check if the maximum fitness has not improved over the patience interval
+        max_fitness_in_history = max(self._fitness_history[-patience:])
+        # Compare the maximum fitness in the last 'patience' generations to the overall max before that period
+        is_stagnant = self._fitness_history[-patience] >= max_fitness_in_history
+
+        return is_stagnant
 
 class FeedForwardNet(object):
     """Base class for a 'FeedForwardNet' that learns through the evolution
@@ -169,6 +184,7 @@ class FeedForwardNet(object):
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
+        
         global_fitness_sum = 0
         for s in self._species:
             s.update_fitness()
@@ -190,7 +206,7 @@ class FeedForwardNet(object):
             # Eliminate lowest performing genomes per specie
             for s in self._species:
                 s.cull_genomes(False)
-
+                
             # Repopulate
             for i, s in enumerate(self._species):
                 ratio = s._fitness_sum/global_fitness_sum

@@ -3,7 +3,7 @@ import copy
 
 from genotype import Genome
 
-def genomic_distance(a, b, distance_weights):
+def genomic_distance(a, b, distance_weights): # distance_weights === c vector
     """Calculate the genomic distance between two genomes."""
     a_edges = set(a._edges)
     b_edges = set(b._edges)
