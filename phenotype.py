@@ -40,7 +40,8 @@ class Hyperparameters(object):
         self.champion_population_threshold = kwargs.get('champion_threshold', 0)
 
 class Specie(object):
-    """A specie represents a set of genomes whose genomic distances 
+    """
+    A specie represents a set of genomes whose genomic distances 
     between them fall under the FeedForwardNet's delta threshold.
     """
     def __init__(self, max_fitness_history, *members):

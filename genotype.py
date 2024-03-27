@@ -24,18 +24,18 @@ class Genome(object):
         self._inputs = inputs
         self._outputs = outputs
 
-        self._unhidden = inputs+outputs
-        self._max_node = inputs+outputs
+        self._unhidden = inputs+outputs # Number of unhidden nodes
+        self._max_node = inputs+outputs # Number of nodes (starting from i+o) TODO : check if this is correct
 
         # Structure
-        self._edges = {} # (i, j) : Edge
-        self._nodes = {} # NodeID : Node
+        self._edges = {} # (i, j) : Edge TODO : check if this is correct
+        self._nodes = {} # NodeID : Node TODO : check if this is correct
 
         self._default_activation = default_activation
 
         # Performance
-        self._fitness = 0
-        self._adjusted_fitness = 0
+        self._fitness = 0 # TODO : check if this is correct
+        self._adjusted_fitness = 0 # TODO : check if this is correct
 
     def generate(self):
         """Generate the neural network of this genome with minimal
@@ -44,19 +44,22 @@ class Genome(object):
         """
         # Minimum initial topology, no hidden layer
         
-        # Start with fc with no hidden layers
-        
+        # initialize nodes with default activation
         for n in range(self._max_node):
             self._nodes[n] = Node(self._default_activation)
 
+        # connect all input nodes to all output nodes
         for i in range(self._inputs):
             for j in range(self._inputs, self._unhidden):
                 self.add_edge(i, j, random.uniform(-1, 1))
                 
     def forward(self, inputs):
-        """Evaluate inputs and calculate the outputs of the
+        """
+        Evaluate inputs and calculate the outputs of the
         neural network via the forward propagation algorithm.
         """
+        
+        # Check if the number of inputs is correct TODO : might be unnecessary for final implementation
         if len(inputs) != self._inputs:
             raise ValueError("Incorrect number of inputs.")
 
@@ -64,7 +67,7 @@ class Genome(object):
         for i in range(self._inputs):
             self._nodes[i].output = inputs[i]
         
-        # Generate backward-adjacency list 
+        # Generate backward-adjacency list (from -> to) a list of all incoming edges to a node
         _from = {}
         for n in range(self._max_node):
             _from[n] = []
@@ -74,13 +77,15 @@ class Genome(object):
                 continue
             _from[j].append(i)
 
-        # Calculate output values for each node
+        # Calculate output values for each node in topological order  TODO : check if this is correct
         ordered_nodes = itertools.chain(
             range(self._unhidden, self._max_node),
             range(self._inputs, self._unhidden)
         )
+        
+        # Calculate output values for each node in topological order 
         for j in ordered_nodes:
-            ax = 0
+            ax = 0  # Activation value
             for i in _from[j]:
                 ax += self._edges[(i, j)].weight * self._nodes[i].output
 
@@ -88,6 +93,8 @@ class Genome(object):
             node.output = node.activation(ax + node.bias)
         
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
+
+    # TODO : CONTINUE FROM HERE
 
     def mutate(self, probabilities):
         """Randomly mutate the genome to initiate variation."""

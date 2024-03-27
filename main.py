@@ -2,35 +2,27 @@ from simulation import Simulation
 import pandas as pd
 import random
 import time
+import xor
+
+
 if __name__ == '__main__':
     # XOR problem
     import xor
     random.seed(0)
     sim_xor = Simulation(
-        inputs=xor.input_size,
-        outputs=xor.output_size,
-        population=xor.population,
-        hyperparams={
-            "max_generations" : xor.max_generations, 
-            "max_fitness" : xor.fitness_threshold,
-            "default_activation" : xor.activation_function,
-            "breed_probabilities" : xor.breed_probs,
-            "mutation_probabilities" : xor.mut_probs,
-            "distance_weights" : xor.distance_weights,
-            "interspecies_mating_rate" : xor.interspecies_mating,
-            "patience" : xor.patience,
-            "champion_population_threshold" : xor.champion_population_threshold
-
-        },
+        inputs=2,
+        outputs=1,
+        population=150, 
+        hyperparams=xor.hyperparams,
         fitness_function=xor.fitness,
         eval_function=xor.evaluate,
-        verbose=False
+        verbose=True
     )
-
     start = time.time()
-    metrics = []
+    metrics = [] # store results :{num_hidden, active_connections, generations_to_solution, best_fitness}
+
     for i in range(xor.runs):
-        sim_xor.setup_network()
+        sim_xor.reset_network()
         sim_xor.run_simulation()
         sim_xor.display_results()
         results = sim_xor.display_best_network_structure()

@@ -15,7 +15,7 @@ class Simulation:
         self.ffn = None  # FeedForward Network instance
         self.verbose = verbose
 
-    def setup_network(self):
+    def reset_network(self):
         """Initialize the FeedForward Network with the specified hyperparameters."""
         self.ffn = FeedForwardNet(self.inputs, self.outputs, self.population, self.hyperparams)
         self.ffn.generate()

@@ -5,7 +5,6 @@ from functools import partial
 
 input_size = 2
 output_size = 1
-
 population = 150
 
 # The experiment says until we find solution, but if NEAT is stuck, halt early
