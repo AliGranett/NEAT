@@ -2,10 +2,8 @@ import random
 import pickle
 import math
 import multiprocessing as mp
-
 import activations
 import operations
-
 from genotype import Genome
 
 
@@ -59,11 +57,13 @@ class Specie(object):
         choice = random.choices(population, weights=probabilities)[0]
 
         if choice == "asexual" or len(self._members) == 1:
+            # TODO: check type for child
             child = random.choice(self._members).clone()
             child.mutate(mutation_probabilities)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = operations.genomic_crossover(mom, dad)
+            # TODO: add interspecies mating
 
         return child
 
@@ -72,9 +72,9 @@ class Specie(object):
         and the historical fitness."""
         for g in self._members:
             g._adjusted_fitness = g._fitness/len(self._members)
-
         self._fitness_sum = sum([g._adjusted_fitness for g in self._members])
         self._fitness_history.append(self._fitness_sum)
+        # TODO: check if it pops the oldest fitness and not the newest
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
@@ -86,6 +86,8 @@ class Specie(object):
             remaining = 1
         else:
             # Keep top 25%
+            # TODO: try to change to 50%
+            # TODO: check what they did in original paper
             remaining = int(math.ceil(0.25*len(self._members)))
 
         self._members = self._members[:remaining]
@@ -98,20 +100,21 @@ class Specie(object):
         """Determine whether species should survive the culling."""
         n = len(self._fitness_history)
         avg = sum(self._fitness_history) / n
+        # TODO: patience = self._max_fitness_history
         return avg > self._fitness_history[0] or n < self._max_fitness_history
 
-    def is_stagnant(self, patience):
-        """Determine if a species is stagnant based on a lack of fitness improvement."""
-        # Check if there's enough history to evaluate stagnation
-        if len(self._fitness_history) <= patience:
-            return False  # Not enough history to consider stagnation
+    # def is_stagnant(self, patience):
+    #     """Determine if a species is stagnant based on a lack of fitness improvement."""
+    #     # Check if there's enough history to evaluate stagnation
+    #     if len(self._fitness_history) <= patience:
+    #         return False  # Not enough history to consider stagnation
 
-        # Check if the maximum fitness has not improved over the patience interval
-        max_fitness_in_history = max(self._fitness_history[-patience:])
-        # Compare the maximum fitness in the last 'patience' generations to the overall max before that period
-        is_stagnant = self._fitness_history[-patience] >= max_fitness_in_history
+    #     # Check if the maximum fitness has not improved over the patience interval
+    #     max_fitness_in_history = max(self._fitness_history[-patience:])
+    #     # Compare the maximum fitness in the last 'patience' generations to the overall max before that period
+    #     is_stagnant = self._fitness_history[-patience] >= max_fitness_in_history
 
-        return is_stagnant
+    #     return is_stagnant
 
 class FeedForwardNet(object):
     """Base class for a 'FeedForwardNet' that learns through the evolution
@@ -176,6 +179,7 @@ class FeedForwardNet(object):
         top_performers = [s.get_best() for s in self._species]
         current_top = max(top_performers, key=lambda g: g._fitness)
 
+        # TODO: roll over the champion automatically to the next generation if specie has enough members
         if current_top._fitness > self._global_best._fitness:
             self._global_best = current_top.clone()
 
@@ -212,6 +216,7 @@ class FeedForwardNet(object):
                 ratio = s._fitness_sum/global_fitness_sum
                 diff = self._population - self.get_population()
                 offspring = int(round(ratio * diff))
+                # TODO: add interspies mating  
                 for j in range(offspring):
                     self.classify_genome(
                         s.breed(
@@ -219,7 +224,7 @@ class FeedForwardNet(object):
                             self._hyperparams.breed_probabilities
                         )
                     )
-
+            # TODO: avoid death of all spcies
             # No species survived
             # Repopulate using mutated minimal structures and global best
             if not self._species:
@@ -245,6 +250,7 @@ class FeedForwardNet(object):
 
         return fit and end
 
+    # TODO: check whats that for
     def next_iteration(self):
         """Call after every evaluation of individual genomes to
         progress training.
