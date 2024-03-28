@@ -2,14 +2,18 @@ import itertools
 import random
 import copy
 
+
 class Edge(object):
     """A gene object representing an edge in the neural network."""
+
     def __init__(self, weight):
         self.weight = weight
         self.enabled = True
 
+
 class Node(object):
     """A gene object representing a node in the neural network."""
+
     def __init__(self, activation):
         self.output = 0
         self.bias = 0
@@ -18,26 +22,27 @@ class Node(object):
 
 class Genome(object):
     """Base class for a standard genome used by the NEAT algorithm."""
-    def __init__(self, inputs, outputs, default_activation,a=1):
+
+    def __init__(self, inputs, outputs, default_activation, a=1):
         # Nodes
         self._inputs = inputs
         self._outputs = outputs
 
-        self._unhidden = inputs+outputs # Number of unhidden nodes
-        self._max_node = inputs+outputs # Number of nodes (starting from i+o) 
+        self._unhidden = inputs+outputs  # Number of unhidden nodes
+        self._max_node = inputs+outputs  # Number of nodes (starting from i+o)
 
         # Structure
-        self._edges = {} # (i, j) : Edge 
-        self._nodes = {} # NodeID : Node 
+        self._edges = {}  # (i, j) : Edge
+        self._nodes = {}  # NodeID : Node
 
         self._default_activation = default_activation
 
         # Performance
-        self._fitness = 0 # 
-        self._adjusted_fitness = 0 # 
-        
-        #range lim
-        self.a=a
+        self._fitness = 0
+        self._adjusted_fitness = 0
+
+        # range lim
+        self.a = a
 
     def generate(self):
         """Generate the neural network of this genome with minimal
@@ -45,7 +50,7 @@ class Genome(object):
         creation.
         """
         # Minimum initial topology, no hidden layer
-        
+
         # initialize nodes with default activation
         for n in range(self._max_node):
             self._nodes[n] = Node(self._default_activation)
@@ -54,21 +59,21 @@ class Genome(object):
         for i in range(self._inputs):
             for j in range(self._inputs, self._unhidden):
                 self.add_edge(i, j, random.uniform(-1, 1))
-                
+
     def forward(self, inputs):
         """
         Evaluate inputs and calculate the outputs of the
         neural network via the forward propagation algorithm.
         """
-        
-        # Check if the number of inputs is correct 
+
+        # Check if the number of inputs is correct
         if len(inputs) != self._inputs:
             raise ValueError("Incorrect number of inputs.")
 
         # Set input values
         for i in range(self._inputs):
             self._nodes[i].output = inputs[i]
-        
+
         # Generate backward-adjacency list (from -> to) a list of all incoming edges to a node
         _from = {}
         for n in range(self._max_node):
@@ -79,13 +84,13 @@ class Genome(object):
                 continue
             _from[j].append(i)
 
-        # Calculate output values for each node in topological order  
+        # Calculate output values for each node in topological order
         ordered_nodes = itertools.chain(
             range(self._unhidden, self._max_node),
             range(self._inputs, self._unhidden)
         )
-        
-        # Calculate output values for each node in topological order 
+
+        # Calculate output values for each node in topological order
         for j in ordered_nodes:
             ax = 0  # Activation value
             for i in _from[j]:
@@ -93,12 +98,10 @@ class Genome(object):
 
             node = self._nodes[j]
             node.output = node.activation(ax + node.bias)
-        
+
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
-
-    
-    def mutate(self, probabilities= {'node' : 0.03,'edge' : 0.05,'weight_perturb': 0.8*0.9,'weight_set': 0.8*0.1,'bias_perturb': 0.12*0.3,'bias_set': 0.12*0.7}):
+    def mutate(self, probabilities={'node': 0.03, 'edge': 0.05, 'weight_perturb': 0.8*0.9, 'weight_set': 0.8*0.1, 'bias_perturb': 0.12*0.3, 'bias_set': 0.12*0.7}):
         """Randomly mutate the genome to initiate variation."""
         if self.is_disabled():
             self.add_enabled()
@@ -108,7 +111,6 @@ class Genome(object):
         weights = [probabilities[k] for k in population]
         choice = random.choices(population, weights=weights)[0]
 
-        
         if choice == "node":
             self.add_node()
         elif choice == "edge":
@@ -143,19 +145,19 @@ class Genome(object):
             self._edges[(i, j)].enabled = True
         else:
             self._edges[(i, j)] = Edge(weight)
-            
+
     def add_enabled(self):
         """Re-enable a random disabled edge."""
         disabled = [e for e in self._edges if not self._edges[e].enabled]
 
         if len(disabled) > 0:
             self._edges[random.choice(disabled)].enabled = True
-        
+
     def shift_weight(self, type):
         """Randomly shift, perturb, or set one of the edge weights."""
         e = random.choice(list(self._edges.keys()))
         if type == "weight_perturb":
-            self._edges[e].weight *= random.uniform(0, self.a)
+            self._edges[e].weight += random.gauss(0, self.a/4)
         elif type == "weight_set":
             self._edges[e].weight = random.uniform(-self.a, self.a)
 
@@ -164,7 +166,7 @@ class Genome(object):
         # Select only nodes in the hidden and output layer
         n = random.choice(range(self._inputs, self._max_node))
         if type == "bias_perturb":
-            self._nodes[n].bias *= random.uniform(0, self.a)
+            self._nodes[n].bias += random.gauss(0, self.a/4)
         elif type == "bias_set":
             self._nodes[n].bias = random.uniform(-self.a, self.a)
 
