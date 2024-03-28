@@ -12,9 +12,9 @@ from genotype import Genome
 class Hyperparameters(object):
     """Hyperparameter settings for the FeedForwardNet object."""
     def __init__(self, **kwargs):
-        self.delta_threshold = kwargs.get('delta_threshold', 1.5)
+        self.delta_threshold = kwargs.get('delta_threshold', 1.5) #distance threshold for speciation
         self.distance_weights = kwargs.get('distance_weights', {
-            'edge': 1.0,
+            'edge': 1.0, 
             'weight': 1.0,
             'bias': 1.0
         })
@@ -22,7 +22,6 @@ class Hyperparameters(object):
         self.max_fitness = kwargs.get('max_fitness', float('inf'))
         self.max_generations = kwargs.get('max_generations', float('inf'))
         self.max_fitness_history = kwargs.get('max_fitness_history', 30)
-
         self.breed_probabilities = kwargs.get('breed_probabilities', {
             'asexual': 0.5,
             'sexual': 0.5
