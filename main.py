@@ -20,14 +20,15 @@ if __name__ == '__main__':
     sim_xor = Simulation(
         inputs=2,
         outputs=1,
-        population=150, 
+        population=150,
         hyperparams=xor.hyperparams,
         fitness_function=xor.fitness,
         eval_function=xor.evaluate,
-        verbose=True
+        verbose=False
     )
     start = time.time()
-    metrics = [] # store results :{num_hidden, active_connections, generations_to_solution, best_fitness}
+    # store results :{num_hidden, active_connections, generations_to_solution, best_fitness}
+    metrics = []
 
     for i in range(xor.runs):
         sim_xor.reset_network()
@@ -38,7 +39,8 @@ if __name__ == '__main__':
         num_hidden, active_connections, generations_to_solution, best_fitness = results
         print(f"Run {i+1:>3} complete | Best accuracy: {int(best_fitness*100):>3}%, {num_hidden} hidden nodes, {active_connections:>3} active connections, {generations_to_solution:>3} generations to solution | {time.time() - start:.2f} seconds elapsed.")
 
-    df = pd.DataFrame(metrics, columns=["num_hidden", "active_connections", "generations_to_solution", "best_fitness"])
+    df = pd.DataFrame(metrics, columns=[
+                      "num_hidden", "active_connections", "generations_to_solution", "best_fitness"])
     df['best_fitness'] = df['best_fitness'] * 100
     print("\nSummary (all):")
     print(df.describe())
