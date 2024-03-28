@@ -8,7 +8,6 @@ class Edge(object):
         self.weight = weight
         self.enabled = True
 
-
 class Node(object):
     """A gene object representing a node in the neural network."""
     def __init__(self, activation):
@@ -19,23 +18,26 @@ class Node(object):
 
 class Genome(object):
     """Base class for a standard genome used by the NEAT algorithm."""
-    def __init__(self, inputs, outputs, default_activation):
+    def __init__(self, inputs, outputs, default_activation,a=1):
         # Nodes
         self._inputs = inputs
         self._outputs = outputs
 
         self._unhidden = inputs+outputs # Number of unhidden nodes
-        self._max_node = inputs+outputs # Number of nodes (starting from i+o) TODO : check if this is correct
+        self._max_node = inputs+outputs # Number of nodes (starting from i+o) 
 
         # Structure
-        self._edges = {} # (i, j) : Edge TODO : check if this is correct
-        self._nodes = {} # NodeID : Node TODO : check if this is correct
+        self._edges = {} # (i, j) : Edge 
+        self._nodes = {} # NodeID : Node 
 
         self._default_activation = default_activation
 
         # Performance
-        self._fitness = 0 # TODO : check if this is correct
-        self._adjusted_fitness = 0 # TODO : check if this is correct
+        self._fitness = 0 # 
+        self._adjusted_fitness = 0 # 
+        
+        #range lim
+        self.a=a
 
     def generate(self):
         """Generate the neural network of this genome with minimal
@@ -59,7 +61,7 @@ class Genome(object):
         neural network via the forward propagation algorithm.
         """
         
-        # Check if the number of inputs is correct TODO : might be unnecessary for final implementation
+        # Check if the number of inputs is correct 
         if len(inputs) != self._inputs:
             raise ValueError("Incorrect number of inputs.")
 
@@ -77,7 +79,7 @@ class Genome(object):
                 continue
             _from[j].append(i)
 
-        # Calculate output values for each node in topological order  TODO : check if this is correct
+        # Calculate output values for each node in topological order  
         ordered_nodes = itertools.chain(
             range(self._unhidden, self._max_node),
             range(self._inputs, self._unhidden)
@@ -94,22 +96,24 @@ class Genome(object):
         
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
-    # TODO : CONTINUE FROM HERE
 
-    def mutate(self, probabilities):
+    
+    def mutate(self, probabilities= {'node' : 0.03,'edge' : 0.05,'weight_perturb': 0.8*0.9,'weight_set': 0.8*0.1,'bias_perturb': 0.12*0.3,'bias_set': 0.12*0.7}):
         """Randomly mutate the genome to initiate variation."""
         if self.is_disabled():
             self.add_enabled()
 
+        # we extract probabilties use them to choose a key in acco
         population = list(probabilities.keys())
         weights = [probabilities[k] for k in population]
         choice = random.choices(population, weights=weights)[0]
 
+        
         if choice == "node":
             self.add_node()
         elif choice == "edge":
             (i, j) = self.random_pair()
-            self.add_edge(i, j, random.uniform(-1, 1))
+            self.add_edge(i, j, random.uniform(-self.a, self.a))
         elif choice == "weight_perturb" or choice == "weight_set":
             self.shift_weight(choice)
         elif choice == "bias_perturb" or choice == "bias_set":
@@ -151,18 +155,18 @@ class Genome(object):
         """Randomly shift, perturb, or set one of the edge weights."""
         e = random.choice(list(self._edges.keys()))
         if type == "weight_perturb":
-            self._edges[e].weight += random.uniform(-1, 1)
+            self._edges[e].weight *= random.uniform(0, self.a)
         elif type == "weight_set":
-            self._edges[e].weight = random.uniform(-1, 1)
+            self._edges[e].weight = random.uniform(-self.a, self.a)
 
     def shift_bias(self, type):
         """Randomly shift, perturb, or set the bias of an incoming edge."""
         # Select only nodes in the hidden and output layer
         n = random.choice(range(self._inputs, self._max_node))
         if type == "bias_perturb":
-            self._nodes[n].bias += random.uniform(-1, 1)
+            self._nodes[n].bias *= random.uniform(0, self.a)
         elif type == "bias_set":
-            self._nodes[n].bias = random.uniform(-1, 1)
+            self._nodes[n].bias = random.uniform(-self.a, self.a)
 
     def random_pair(self):
         """
