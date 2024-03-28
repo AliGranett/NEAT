@@ -4,7 +4,7 @@ def _sigmoid(x):
     """Return the S-Curve activation of x."""
     return 1/(1+math.exp(-x))
 
-def sigmoid(x, alpha):
+def sigmoid(x, alpha=4.9):
     """ Scale the sigmoid function by alpha"""
     return _sigmoid(alpha * x)
 

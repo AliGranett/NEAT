@@ -165,7 +165,8 @@ class Genome(object):
             self._nodes[n].bias = random.uniform(-1, 1)
 
     def random_pair(self):
-        """Generate random nodes (i, j) such that:
+        """
+        Generate random nodes (i, j) such that:
         1. i is not an output
         2. j is not an input
         3. i != j
