@@ -8,14 +8,13 @@ import xor
 TODO LIST:
 1. add inter-species mating
 2. add champion cloning for species with more than (5 : check paper) members
-3. add patience (max history) for species with no improvement in fitness 
+3. add patience (max history) for species with no improvement in fitness
 4. add enable/disable edge mutation
 """
 
 
 if __name__ == '__main__':
     # XOR problem
-    import xor
     random.seed(0)
     sim_xor = Simulation(
         inputs=2,
@@ -45,6 +44,6 @@ if __name__ == '__main__':
     print("\nSummary (all):")
     print(df.describe())
     print("\nSummary (successful runs):")
-    print(df[df['generations_to_solution'] < xor.max_generations].describe())
+    print(df[df['generations_to_solution'] < xor.hyperparams['max_generations']].describe())
     end = time.time() - start
     print(f"Time took: {end:,} seconds.")

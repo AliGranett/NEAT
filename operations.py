@@ -1,3 +1,4 @@
+from importlib.metadata import distribution
 import random
 import copy
 
@@ -33,7 +34,11 @@ def genomic_crossover(a, b):
     from the fitter parent.
     """
     # Template genome for child
-    child = Genome(a._inputs, a._outputs, a._default_activation)
+    distributions_parameters = {
+        "uniform_range" : a.a,
+        "gauss_std": a.std
+    }
+    child = Genome(a._inputs, a._outputs, a._default_activation, distributions_parameters)
     a_in = set(a._edges)
     b_in = set(b._edges)
 

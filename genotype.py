@@ -23,7 +23,7 @@ class Node(object):
 class Genome(object):
     """Base class for a standard genome used by the NEAT algorithm."""
 
-    def __init__(self, inputs, outputs, default_activation, a=1):
+    def __init__(self, inputs, outputs, default_activation, distributions_parameters):
         # Nodes
         self._inputs = inputs
         self._outputs = outputs
@@ -42,7 +42,8 @@ class Genome(object):
         self._adjusted_fitness = 0
 
         # range lim
-        self.a = a
+        self.a = distributions_parameters['uniform_range']
+        self.std = distributions_parameters['gauss_std']
 
     def generate(self):
         """Generate the neural network of this genome with minimal
@@ -157,7 +158,7 @@ class Genome(object):
         """Randomly shift, perturb, or set one of the edge weights."""
         e = random.choice(list(self._edges.keys()))
         if type == "weight_perturb":
-            self._edges[e].weight += random.gauss(0, self.a/4)
+            self._edges[e].weight += random.gauss(0, self.std)
         elif type == "weight_set":
             self._edges[e].weight = random.uniform(-self.a, self.a)
 
@@ -166,7 +167,7 @@ class Genome(object):
         # Select only nodes in the hidden and output layer
         n = random.choice(range(self._inputs, self._max_node))
         if type == "bias_perturb":
-            self._nodes[n].bias += random.gauss(0, self.a/4)
+            self._nodes[n].bias += random.gauss(0, self.std)
         elif type == "bias_set":
             self._nodes[n].bias = random.uniform(-self.a, self.a)
 

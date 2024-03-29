@@ -31,7 +31,7 @@ def main():
     hyperparams = phenotype.Hyperparameters()
     hyperparams.max_generations = 300
 
-    ffn = phenotype.FeedForwardNet(2, 1, 150, hyperparams)
+    ffn = phenotype.NEAT(2, 1, 150, hyperparams)
     ffn.generate()
     
     print("Training...")

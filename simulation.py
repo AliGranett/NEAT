@@ -1,7 +1,7 @@
 import phenotype
 import numpy as np
 import time
-from phenotype import FeedForwardNet, Hyperparameters
+from phenotype import NEAT, Hyperparameters
 from typing import Callable
 
 class Simulation:
@@ -17,7 +17,7 @@ class Simulation:
 
     def reset_network(self):
         """Initialize the FeedForward Network with the specified hyperparameters."""
-        self.ffn = FeedForwardNet(self.inputs, self.outputs, self.population, self.hyperparams)
+        self.ffn = NEAT(self.inputs, self.outputs, self.population, self.hyperparams)
         self.ffn.generate()
 
     def run_simulation(self):

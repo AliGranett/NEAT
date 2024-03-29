@@ -9,10 +9,12 @@ from genotype import Genome
 
 class Hyperparameters(object):
     """Hyperparameter settings for the FeedForwardNet object."""
+
     def __init__(self, **kwargs):
-        self.delta_threshold = kwargs.get('delta_threshold', 1.5) #distance threshold for speciation
+        # distance threshold for speciation
+        self.delta_threshold = kwargs.get('delta_threshold', 1.5)
         self.distance_weights = kwargs.get('distance_weights', {
-            'edge': 1.0, 
+            'edge': 1.0,
             'weight': 1.0,
             'bias': 1.0
         })
@@ -32,15 +34,21 @@ class Hyperparameters(object):
             'bias_perturb': 0.3,
             'bias_set': 0.1
         })
+        self.distributions_parameters = kwargs.get('distributions_parameters', {
+            'uniform_range': 1,
+            'gauss_sigma': 1
+        })
         self.interspecies_mating = kwargs.get('interspecies_mating', 0.0)
         self.patience = kwargs.get('patience', float('inf'))
         self.champion_population_threshold = kwargs.get('champion_threshold', 0)
+
 
 class Specie(object):
     """
     A specie represents a set of genomes whose genomic distances 
     between them fall under the FeedForwardNet's delta threshold.
     """
+
     def __init__(self, max_fitness_history, *members):
         self._members = list(members)
         self._fitness_history = []
@@ -53,7 +61,7 @@ class Specie(object):
         """
         # Either mutate a clone or breed two random genomes
         population = list(breed_probabilities.keys())
-        probabilities= [breed_probabilities[k] for k in population]
+        probabilities = [breed_probabilities[k] for k in population]
         choice = random.choices(population, weights=probabilities)[0]
 
         if choice == "asexual" or len(self._members) == 1:
@@ -116,10 +124,12 @@ class Specie(object):
 
     #     return is_stagnant
 
-class FeedForwardNet(object):
-    """Base class for a 'FeedForwardNet' that learns through the evolution
+
+class NEAT(object):
+    """Base class for 'NEAT' algorithm that learns through the evolution
     of a population of genomes.
     """
+
     def __init__(self, inputs, outputs, population=100, hyperparams=Hyperparameters()):
         self._inputs = inputs
         self._outputs = outputs
@@ -129,7 +139,7 @@ class FeedForwardNet(object):
 
         # Hyper-parameters
         self._hyperparams = hyperparams
-        
+
         self._generation = 0
         self._current_species = 0
         self._current_genome = 0
@@ -139,11 +149,13 @@ class FeedForwardNet(object):
     def generate(self):
         """Generate the initial population of genomes."""
         for i in range(self._population):
-            g = Genome(self._inputs, self._outputs, 
-                       self._hyperparams.default_activation)
+            g = Genome(self._inputs, self._outputs,
+                       self._hyperparams.default_activation,
+                       self._hyperparams.distributions_parameters
+                       )
             g.generate()
             self.classify_genome(g)
-        
+
         # Set the initial best genome
         self._global_best = self._species[0]._members[0]
 
@@ -154,13 +166,13 @@ class FeedForwardNet(object):
         if not self._species:
             # Empty population
             self._species.append(Specie(
-                    self._hyperparams.max_fitness_history, genome
-                )
+                self._hyperparams.max_fitness_history, genome
+            )
             )
         else:
             # Compare genome against representative s[0] in each specie
             for s in self._species:
-                rep =  s._members[0]
+                rep = s._members[0]
                 dist = operations.genomic_distance(
                     genome, rep, self._hyperparams.distance_weights
                 )
@@ -170,8 +182,8 @@ class FeedForwardNet(object):
 
             # Doesn't fit with any other specie, create a new one
             self._species.append(Specie(
-                    self._hyperparams.max_fitness_history, genome
-                )
+                self._hyperparams.max_fitness_history, genome
+            )
             )
 
     def update_fittest(self):
@@ -188,7 +200,7 @@ class FeedForwardNet(object):
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
-        
+
         global_fitness_sum = 0
         for s in self._species:
             s.update_fitness()
@@ -210,17 +222,17 @@ class FeedForwardNet(object):
             # Eliminate lowest performing genomes per specie
             for s in self._species:
                 s.cull_genomes(False)
-                
+
             # Repopulate
             for i, s in enumerate(self._species):
                 ratio = s._fitness_sum/global_fitness_sum
                 diff = self._population - self.get_population()
                 offspring = int(round(ratio * diff))
-                # TODO: add interspies mating  
+                # TODO: add interspies mating
                 for j in range(offspring):
                     self.classify_genome(
                         s.breed(
-                            self._hyperparams.mutation_probabilities, 
+                            self._hyperparams.mutation_probabilities,
                             self._hyperparams.breed_probabilities
                         )
                     )
@@ -229,11 +241,12 @@ class FeedForwardNet(object):
             # Repopulate using mutated minimal structures and global best
             if not self._species:
                 for i in range(self._population):
-                    if i%3 == 0:
+                    if i % 3 == 0:
                         g = self._global_best.clone()
                     else:
-                        g = Genome(self._inputs, self._outputs, 
-                                   self._hyperparams.default_activation)
+                        g = Genome(self._inputs, self._outputs,
+                                   self._hyperparams.default_activation, 
+                                   self._hyperparams.distributions_parameters)
                         g.generate()
                     g.mutate(self._hyperparams.mutation_probabilities)
                     self.classify_genome(g)
@@ -278,13 +291,13 @@ class FeedForwardNet(object):
         """
         max_proc = max(mp.cpu_count()-1, 1)
         pool = mp.Pool(processes=max_proc)
-        
+
         results = {}
         for i in range(len(self._species)):
             for j in range(len(self._species[i]._members)):
                 results[(i, j)] = pool.apply_async(
-                    evaluator, 
-                    args=[self._species[i]._members[j]]+list(args), 
+                    evaluator,
+                    args=[self._species[i]._members[j]]+list(args),
                     kwds=kwargs
                 )
 
