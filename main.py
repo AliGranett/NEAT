@@ -19,7 +19,7 @@ if __name__ == '__main__':
     sim_xor = Simulation(
         inputs=2,
         outputs=1,
-        population=150,
+        population=250,
         hyperparams=xor.hyperparams,
         fitness_function=xor.fitness,
         eval_function=xor.evaluate,
@@ -35,8 +35,8 @@ if __name__ == '__main__':
         sim_xor.display_results()
         results = sim_xor.display_best_network_structure()
         metrics.append(results)
-        num_hidden, active_connections, generations_to_solution, best_fitness = results
-        print(f"Run {i+1:>3} complete | Best accuracy: {int(best_fitness*100):>3}%, {num_hidden} hidden nodes, {active_connections:>3} active connections, {generations_to_solution:>3} generations to solution | {time.time() - start:.2f} seconds elapsed.")
+        num_hidden, active_connections, num_inactive_connections ,generations_to_solution, best_fitness = results
+        print(f"Run {i+1:>3} complete | Best accuracy: {int(best_fitness*100):>3}%, {num_hidden} hidden nodes, {active_connections:>3} active connections (inactive: {num_inactive_connections:>3}) ,{generations_to_solution:>3} generations to solution | {time.time() - start:.2f} seconds elapsed.")
 
     df = pd.DataFrame(metrics, columns=[
                       "num_hidden", "active_connections", "generations_to_solution", "best_fitness"])

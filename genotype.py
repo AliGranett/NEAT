@@ -1,9 +1,11 @@
+from faulthandler import is_enabled
 import itertools
+from operator import is_
 import random
 import copy
 
 
-class Edge(object):
+class Edge:
     """A gene object representing an edge in the neural network."""
 
     def __init__(self, weight):
@@ -11,7 +13,7 @@ class Edge(object):
         self.enabled = True
 
 
-class Node(object):
+class Node:
     """A gene object representing a node in the neural network."""
 
     def __init__(self, activation):
@@ -20,7 +22,7 @@ class Node(object):
         self.activation = activation
 
 
-class Genome(object):
+class Genome:
     """Base class for a standard genome used by the NEAT algorithm."""
 
     def __init__(self, inputs, outputs, default_activation, distributions_parameters):
@@ -59,7 +61,7 @@ class Genome(object):
         # connect all input nodes to all output nodes
         for i in range(self._inputs):
             for j in range(self._inputs, self._unhidden):
-                self.add_edge(i, j, random.uniform(-1, 1))
+                self.add_edge(i, j, random.gauss(0, self.std))
 
     def forward(self, inputs):
         """
@@ -102,7 +104,7 @@ class Genome(object):
 
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
-    def mutate(self, probabilities={'node': 0.03, 'edge': 0.05, 'weight_perturb': 0.8*0.9, 'weight_set': 0.8*0.1, 'bias_perturb': 0.12*0.3, 'bias_set': 0.12*0.7}):
+    def mutate(self, probabilities):
         """Randomly mutate the genome to initiate variation."""
         if self.is_disabled():
             self.add_enabled()
@@ -111,7 +113,7 @@ class Genome(object):
         population = list(probabilities.keys())
         weights = [probabilities[k] for k in population]
         choice = random.choices(population, weights=weights)[0]
-
+        print(f"Mutation: {choice}")
         if choice == "node":
             self.add_node()
         elif choice == "edge":
@@ -121,6 +123,8 @@ class Genome(object):
             self.shift_weight(choice)
         elif choice == "bias_perturb" or choice == "bias_set":
             self.shift_bias(choice)
+
+        
 
         self.reset()
 
@@ -152,7 +156,9 @@ class Genome(object):
         disabled = [e for e in self._edges if not self._edges[e].enabled]
 
         if len(disabled) > 0:
-            self._edges[random.choice(disabled)].enabled = True
+            re_enabled = random.choice(disabled)
+            self._edges[re_enabled].enabled = True
+        
 
     def shift_weight(self, type):
         """Randomly shift, perturb, or set one of the edge weights."""
@@ -204,6 +210,10 @@ class Genome(object):
     def is_disabled(self):
         """Determine if all of its genes are disabled."""
         return all(self._edges[i].enabled == False for i in self._edges)
+    
+    def is_enabled(self):
+        """Determine if all of its genes are enabled."""
+        return all(self._edges[i].enabled == True for i in self._edges)
 
     def get_fitness(self):
         """Return the fitness of the genome."""

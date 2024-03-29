@@ -96,7 +96,7 @@ class Specie(object):
             # Keep top 25%
             # TODO: try to change to 50%
             # TODO: check what they did in original paper
-            remaining = int(math.ceil(0.25*len(self._members)))
+            remaining = int(math.ceil(0.5*len(self._members)))
 
         self._members = self._members[:remaining]
 
@@ -110,20 +110,7 @@ class Specie(object):
         avg = sum(self._fitness_history) / n
         # TODO: patience = self._max_fitness_history
         return avg > self._fitness_history[0] or n < self._max_fitness_history
-
-    # def is_stagnant(self, patience):
-    #     """Determine if a species is stagnant based on a lack of fitness improvement."""
-    #     # Check if there's enough history to evaluate stagnation
-    #     if len(self._fitness_history) <= patience:
-    #         return False  # Not enough history to consider stagnation
-
-    #     # Check if the maximum fitness has not improved over the patience interval
-    #     max_fitness_in_history = max(self._fitness_history[-patience:])
-    #     # Compare the maximum fitness in the last 'patience' generations to the overall max before that period
-    #     is_stagnant = self._fitness_history[-patience] >= max_fitness_in_history
-
-    #     return is_stagnant
-
+    
 
 class NEAT(object):
     """Base class for 'NEAT' algorithm that learns through the evolution
@@ -145,6 +132,7 @@ class NEAT(object):
         self._current_genome = 0
 
         self._global_best = None
+        self._champions = []
 
     def generate(self):
         """Generate the initial population of genomes."""
@@ -190,17 +178,18 @@ class NEAT(object):
         """Update the highest fitness score of the whole population."""
         top_performers = [s.get_best() for s in self._species]
         current_top = max(top_performers, key=lambda g: g._fitness)
+        self._champions = [s.get_best() for s in self._species if len(s._members) > self._hyperparams.champion_population_threshold]
 
         # TODO: roll over the champion automatically to the next generation if specie has enough members
         if current_top._fitness > self._global_best._fitness:
             self._global_best = current_top.clone()
+        
 
     def evolve(self):
         """Evolve the population by eliminating the poorest performing
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
-
         global_fitness_sum = 0
         for s in self._species:
             s.update_fitness()
@@ -222,6 +211,11 @@ class NEAT(object):
             # Eliminate lowest performing genomes per specie
             for s in self._species:
                 s.cull_genomes(False)
+            
+            for c in self._champions:
+                c_clone = c.clone()
+                self.classify_genome(c_clone)
+        
 
             # Repopulate
             for i, s in enumerate(self._species):
@@ -236,11 +230,14 @@ class NEAT(object):
                             self._hyperparams.breed_probabilities
                         )
                     )
-            # TODO: avoid death of all spcies
+            # TODO: avoid death of all species
             # No species survived
             # Repopulate using mutated minimal structures and global best
+            
             if not self._species:
+                print("No species survived, repopulating...")
                 for i in range(self._population):
+                    
                     if i % 3 == 0:
                         g = self._global_best.clone()
                     else:
@@ -251,6 +248,7 @@ class NEAT(object):
                     g.mutate(self._hyperparams.mutation_probabilities)
                     self.classify_genome(g)
 
+        print(f"Generation {self._generation}, #Species: {len(self._species)}, #Population: {self.get_population()}")
         self._generation += 1
 
     def should_evolve(self):
@@ -280,7 +278,7 @@ class NEAT(object):
                 self.evolve()
                 self._current_species = 0
                 self._current_genome = 0
-
+    
     def evaluate_parallel(self, evaluator, *args, **kwargs):
         """Evaluate the entire population on separate processes
         to progress training. The evaluator function must take a Genome

@@ -1,6 +1,3 @@
-import phenotype
-import numpy as np
-import time
 from phenotype import NEAT, Hyperparameters
 from typing import Callable
 
@@ -83,7 +80,7 @@ class Simulation:
         num_outputs = self.outputs
         num_hidden = len(nodes) - (num_inputs + num_outputs)
         num_active_connections = sum(1 for edge in edges.values() if edge.enabled)
-
+        num_inactive_connections = sum(1 for edge in edges.values() if not edge.enabled)
         if self.verbose:
             print("\nBest Network Structure:")
             print(f"# of Hidden Nodes: {num_hidden}")
@@ -93,4 +90,4 @@ class Simulation:
             for k in sorted(graph):
                 print(f"{k} -> {graph[k]}")
 
-        return num_hidden, num_active_connections, self.elapsed_generations, best._fitness
+        return num_hidden, num_active_connections, num_inactive_connections, self.elapsed_generations, best._fitness

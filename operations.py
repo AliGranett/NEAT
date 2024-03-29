@@ -12,6 +12,7 @@ def genomic_distance(a, b, distance_weights): # distance_weights === c vector
     # Does not distinguish between disjoint and excess
     matching_edges = a_edges & b_edges
     disjoint_edges = (a_edges - b_edges) | (b_edges - a_edges)
+    # TODO : calculate excess genes (edges)
     N_edges = len(max(a_edges, b_edges, key=len))
     N_nodes = min(a._max_node, b._max_node)
 
