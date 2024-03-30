@@ -131,11 +131,13 @@ def genomic_crossover(a, b):
             else:
                 child._edges[key] = copy.deepcopy(b._edges[key])
     
+    
     # inherit excess genes from the fitter parent
     fitter = a if a._fitness > b._fitness else b
     for innov in fitter.get_edges_innov():
         if innov > cut_off:
-            child._edges[innov] = copy.deepcopy(fitter._edges[innov])
+            key = Genome.get_edge_key(innov)
+            child._edges[key] = copy.deepcopy(fitter._edges[key])
     # # Inherit disjoint/excess genes from fitter parent
     # if a._fitness > b._fitness:
     #     for i in a_in - b_in:
@@ -162,6 +164,6 @@ def genomic_crossover(a, b):
     #     random.shuffle(inherit_from)
     #     parent = max(inherit_from, key=lambda p: p._fitness)
     #     child._nodes[n] = copy.deepcopy(parent._nodes[n])
-
+    child.create_nodes_from_edges()
     child.reset()
     return child

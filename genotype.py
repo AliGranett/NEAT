@@ -138,7 +138,7 @@ class Genome:
         weights = [probabilities[k] for k in population]
         choice = random.choices(population, weights=weights)[0]
         print(f"Mutation: {choice}")
-        if choice == "node":
+        if choice == "node": #TODO check WTF is going on here
             self.add_node()
         elif choice == "edge":
             (i, j) = self.random_pair()
@@ -295,6 +295,15 @@ class Genome:
             if n.output != 0:
                 print(f"eddie is to blame")
         self._fitness = 0
+    
+    def create_nodes_from_edges(self):
+        """Create nodes from edges"""
+        # extract all nodes from edges
+        node_ids= set([i for (i,j)in self._edges.keys()] + [j for (i,j) in self._edges.keys()])
+        for node_id in node_ids:
+            self._nodes[node_id] = Node(self._default_activation)
+        
+        
 
     def clone(self):
         """Return a clone of the genome.
