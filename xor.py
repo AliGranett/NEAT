@@ -28,7 +28,7 @@ hyperparams = {
     "champion_population_threshold": 5,
     "delta_threshold": 3.0,  # threshold for speciation
     "distributions_parameters": {
-        "uniform_range" : 2,
+        "uniform_range" : 2, # uniform [-a, a]
         "gauss_std": 0.5
     }
 }

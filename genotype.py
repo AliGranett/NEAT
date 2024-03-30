@@ -1,25 +1,29 @@
-from faulthandler import is_enabled
 import itertools
-from operator import is_
 import random
 import copy
 
-
 class Edge:
     """A gene object representing an edge in the neural network."""
-
+    innov = 0
+    edge_innov_map = {}
     def __init__(self, weight):
         self.weight = weight
         self.enabled = True
 
+        Edge.innov += 1
+        self.innov = Edge.innov
+
 
 class Node:
     """A gene object representing a node in the neural network."""
-
+    node_id = 0
+    node_innov_map = {}
     def __init__(self, activation):
         self.output = 0
         self.bias = 0
         self.activation = activation
+        Node.node_id += 1
+        self.node_id = Node.node_id
 
 
 class Genome:

@@ -12,7 +12,28 @@ def genomic_distance(a, b, distance_weights): # distance_weights === c vector
     # Does not distinguish between disjoint and excess
     matching_edges = a_edges & b_edges
     disjoint_edges = (a_edges - b_edges) | (b_edges - a_edges)
-    # TODO : calculate excess genes (edges)
+
+    max_innov_a = max(a_edges, key=lambda e: a._edges[e].innov)
+    max_innov_b = max(b_edges, key=lambda e: b._edges[e].innov)
+    
+    # calculate excess genes (edges)
+    smaller, larger = (a, b) if max_innov_a < max_innov_b else (b, a)
+    excess_edges = {e for e in larger._edges if larger._edges[e].innov > smaller._edges[max_innov_a].innov}
+    
+    # check which parent is fittest
+
+    # if parent x is fitter than y and also x is longer than y add all excess genes from x to child
+
+    # else discard excess genes
+
+    # check non matching genes that also have innov number smaller than min(max_innov_a, max_innov_b)
+
+    # copy all non matching genes that have innov number smaller than min(max_innov_a, max_innov_b) to child
+     
+
+
+    
+
     N_edges = len(max(a_edges, b_edges, key=len))
     N_nodes = min(a._max_node, b._max_node)
 
@@ -28,6 +49,27 @@ def genomic_distance(a, b, distance_weights): # distance_weights === c vector
     t2 = distance_weights['weight'] * weight_diff/len(matching_edges)
     t3 = distance_weights['bias'] * bias_diff/N_nodes
     return t1 + t2 + t3
+
+
+def excess_genes(a, b):
+    """Return the excess genes between two genomes."""
+    a_edges = set(a._edges)
+    b_edges = set(b._edges)
+    max_innov_a = max(a_edges, key=lambda e: a._edges[e].innov)
+    max_innov_b = max(b_edges, key=lambda e: b._edges[e].innov)
+    smaller, larger = (a, b) if max_innov_a < max_innov_b else (b, a)
+    return {e for e in larger._edges if larger._edges[e].innov > smaller._edges[max_innov_a].innov}
+
+
+def disjoint_genes(a, b):
+    """Return the disjoint without excess genes between two genomes."""
+    a_edges = set(a._edges)
+    b_edges = set(b._edges)
+    max_innov_a = max(a_edges, key=lambda e: a._edges[e].innov)
+    max_innov_b = max(b_edges, key=lambda e: b._edges[e].innov)
+    smaller, larger = (a, b) if max_innov_a < max_innov_b else (b, a)
+    return {e for e in larger._edges if larger._edges[e].innov < smaller._edges[max_innov_a].innov}
+
 
 def genomic_crossover(a, b):
     """Breed two genomes and return the child. Matching genes
