@@ -147,6 +147,7 @@ class Genome:
             self.shift_weight(choice)
         elif choice == "bias_perturb" or choice == "bias_set":
             self.shift_bias(choice)
+        print(self._nodes.keys())
 
         
 
@@ -213,7 +214,9 @@ class Genome:
         """Randomly shift, perturb, or set the bias of an incoming edge."""
         # Select only nodes in the hidden and output layer
         # n = random.choice(range(self._inputs, self._max_node))
-        n = random.choice([n for n in self._nodes.keys() if n > self._inputs])
+        print([n for n in self._nodes.keys() if n >= self._inputs])
+        print(self._nodes.keys())
+        n = random.choice([n for n in self._nodes.keys() if n >= self._inputs])
         if type == "bias_perturb":
             self._nodes[n].bias += random.gauss(0, self.std)
         elif type == "bias_set":

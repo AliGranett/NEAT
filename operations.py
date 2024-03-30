@@ -112,7 +112,8 @@ def genomic_crossover(a, b):
     # Inherit homologous gene from a random parent
     for innov in a_edges_innov & b_edges_innov:
         parent = random.choice([a, b])
-        child._edges[innov] = copy.deepcopy(parent._edges[innov])
+        key = Genome.get_edge_key(innov)
+        child._edges[key] = copy.deepcopy(parent._edges[key])
         
         
     # inherit disjoint genes from either parent
