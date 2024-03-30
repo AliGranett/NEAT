@@ -7,8 +7,8 @@ import xor
 """
 TODO LIST:
 1. add inter-species mating
-2. add champion cloning for species with more than (5 : check paper) members
-3. add patience (max history) for species with no improvement in fitness
+2. DONE add champion cloning for species with more than (5 : check paper) members
+3. DONE add patience (max history) for species with no improvement in fitness
 4. add enable/disable edge mutation
 """
 
