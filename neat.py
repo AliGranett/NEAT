@@ -137,7 +137,7 @@ class Genome:
         # weights = [probabilities[k] for k in population]
         # choice = random.choices(population, weights=weights)[0]
 
-        if random.random()< probabilities["node"]:#"node": 
+        if (random.random() < probabilities["node"]) | (len(self._nodes.keys())==self._unhidden):#"node": 
             self.add_node()
         if random.random() < probabilities["edge"]:
             (i, j) = self.random_pair()
@@ -640,7 +640,7 @@ class NEAT(object):
                     s1= None
                     if len(self._species)>1 and random.random() < self._hyperparams.interspecies_mating:
                         # Interspecies mating
-                        s1 = random.choice(set(self._species)-set(s))
+                        s1 = random.choice(list(set(self._species)-set([s])))
                     self.classify_genome(
                         s.breed(
                             self._hyperparams.mutation_probabilities,

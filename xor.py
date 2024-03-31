@@ -11,7 +11,7 @@ hyperparams = {
     "mutation_probabilities": {
         # note: default a = 2
         'node': 0.03,
-        'edge': 0.05,
+        'edge': 0.1,
         'weight_perturb': 0.8*0.9,
         'weight_set': 0.8*0.1,
         'bias_perturb': 0.12*0.3,
@@ -26,7 +26,7 @@ hyperparams = {
     "max_fitness_history": 15,  # how many generations to wait for fitness to improve before eliminating a species
     # min number of members in a species to clone champion to next generation
     "champion_population_threshold": 5,
-    "delta_threshold": 3.00,  # threshold for speciation
+    "delta_threshold": 1.50,  # threshold for speciation
     "distributions_parameters": {
         "uniform_range" : 1, # uniform [-a, a]
         "gauss_std": 1/5
