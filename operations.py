@@ -37,7 +37,7 @@ def genomic_distance(a :Genome, b:Genome, distance_weights): # distance_weights 
     return dist
     
 
-def genomic_crossover(a, b):
+def genomic_crossover(a:Genome, b :Genome):
     """Breed two genomes and return the child. Matching genes
     are inherited randomly, while disjoint genes are inherited
     from the fitter parent.
@@ -53,10 +53,23 @@ def genomic_crossover(a, b):
     a_edges_innov =set(a.get_edges_innov())
     b_edges_innov = set(b.get_edges_innov())
     
+    disabled_a = a.get_disabled_edges()
+    disabled_b = b.get_disabled_edges()
+    
+    # disabled edges in both parents
+    disabled_edges = set(disabled_a) ^ set(disabled_b)
+    
     # Inherit homologous gene from a random parent
     for innov in a_edges_innov & b_edges_innov:
         parent = random.choice([a, b])
         key = Genome.get_edge_key(innov)
+        if key in disabled_edges:
+            child._edges[key] = copy.deepcopy(parent._edges[key])
+            is_disabled = random.random()<0.75 #choice([True, False], p=[0.75, 0.25])
+            if is_disabled:
+                child._edges[key].enabled = False
+            else:
+                child._edges[key].enabled = True
         child._edges[key] = copy.deepcopy(parent._edges[key])
         
         

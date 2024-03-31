@@ -14,9 +14,9 @@ class Hyperparameters(object):
         # distance threshold for speciation
         self.delta_threshold = kwargs.get('delta_threshold', 1.5)
         self.distance_weights = kwargs.get('distance_weights', {
-            'edge': 1.0,
-            'weight': 1.0,
-            'bias': 1.0
+            'excess': 1.0,
+            'disjoint': 1.0,
+            'weight': 0.4
         })
         self.default_activation = kwargs.get('default_activation', activations.sigmoid)
         self.max_fitness = kwargs.get('max_fitness', float('inf'))
@@ -38,7 +38,7 @@ class Hyperparameters(object):
             'uniform_range': 1,
             'gauss_sigma': 1
         })
-        self.interspecies_mating = kwargs.get('interspecies_mating', 0.0)
+        self.interspecies_mating = kwargs.get('interspecies_mating', 0.001)
         self.patience = kwargs.get('patience', float('inf'))
         self.champion_population_threshold = kwargs.get('champion_threshold', 0)
 
@@ -55,7 +55,7 @@ class Specie(object):
         self._fitness_sum = 0
         self._max_fitness_history = max_fitness_history
 
-    def breed(self, mutation_probabilities, breed_probabilities):
+    def breed(self, mutation_probabilities, breed_probabilities,other_specie=None):
         """Return a child as a result of either a mutated clone
         or crossover between two parent genomes.
         """
@@ -65,14 +65,17 @@ class Specie(object):
         choice = random.choices(population, weights=probabilities)[0]
 
         if choice == "asexual" or len(self._members) == 1:
-            # TODO: check type for child
             child = random.choice(self._members).clone()
             child.mutate(mutation_probabilities)
         elif choice == "sexual":
-            (mom, dad) = random.sample(self._members, 2)
-            child = operations.genomic_crossover(mom, dad)
-            # TODO: add interspecies mating
-
+            if other_specie!=None:
+                # Interspecies mating
+                mom = random.choice(self._members)
+                dad = random.choice(other_specie._members)
+                child = operations.genomic_crossover(mom, dad)
+            else:
+                (mom, dad) = random.sample(self._members, 2)
+                child = operations.genomic_crossover(mom, dad)
         return child
 
     def update_fitness(self):
@@ -185,11 +188,11 @@ class NEAT(object):
         
 
     def evolve(self):
-        """Evolve the population by eliminating the poorest performing
+        """
+        Evolve the population by eliminating the poorest performing
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
-        print(f"number of species: {len(self._species)}")
         global_fitness_sum = 0
         for s in self._species:
             s.update_fitness()
@@ -222,18 +225,24 @@ class NEAT(object):
                 ratio = s._fitness_sum/global_fitness_sum
                 diff = self._population - self.get_population()
                 offspring = int(round(ratio * diff))
-                # TODO: add interspies mating
+                
+                # Repopulate : each species gets to mutate and breed in proportion to its fitness
                 for j in range(offspring):
+                    s1= None
+                    if len(self._species)>1 and random.random() < self._hyperparams.interspecies_mating:
+                        # Interspecies mating
+                        s1 = random.choice(set(self._species)-set(s))
                     self.classify_genome(
                         s.breed(
                             self._hyperparams.mutation_probabilities,
-                            self._hyperparams.breed_probabilities
+                            self._hyperparams.breed_probabilities,
+                            s1
                         )
                     )
+            
             # TODO: avoid death of all species
             # No species survived
             # Repopulate using mutated minimal structures and global best
-            
             if not self._species:
                 print("No species survived, repopulating...")
                 for i in range(self._population):
@@ -261,7 +270,6 @@ class NEAT(object):
 
         return fit and end
 
-    # TODO: check whats that for
     def next_iteration(self):
         """Call after every evaluation of individual genomes to
         progress training.

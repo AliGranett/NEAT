@@ -21,7 +21,7 @@ class Node:
 class Genome:
     """Base class for a standard genome used by the NEAT algorithm."""
     innov_edge = 0
-    node_id = 0
+    node_id = 2
     # map each (i,j) to an innovation number
     map_edge = {}
     
@@ -92,13 +92,11 @@ class Genome:
 
         # Set input values
         for i in range(self._inputs):
-            self._nodes[i].output = inputs[i] #TODO: might want to modify this to self._nodes[i].output = activation(inputs[i])
+            self._nodes[i].output = inputs[i] # TODO might want to call activation function here
 
         # Generate backward-adjacency list (from -> to) a list of all incoming edges to a node
-        _from = {}
-        # for n in range(self._max_node):
-        #     _from[n] = []
         
+        _from = {}
         for n in self._nodes.keys():
             _from[n] = []
 
@@ -107,11 +105,6 @@ class Genome:
                 continue
             _from[j].append(i)
 
-        # Calculate output values for each node in topological order
-        # ordered_nodes = itertools.chain(
-        #     range(self._unhidden, self._max_node),
-        #     range(self._inputs, self._unhidden)
-        # )
         ordered_nodes = itertools.chain(
             [n for n in self._nodes.keys() if n > self._unhidden ], # a list of all node ids that are hidden
             range(self._inputs, self._unhidden) 
@@ -134,23 +127,29 @@ class Genome:
             self.add_enabled()
 
         # we extract probabilties use them to choose a key in acco
-        population = list(probabilities.keys())
-        weights = [probabilities[k] for k in population]
-        choice = random.choices(population, weights=weights)[0]
-        print(f"Mutation: {choice}")
-        if choice == "node": #TODO check WTF is going on here
+        # population = list(probabilities.keys())
+        # weights = [probabilities[k] for k in population]
+        # choice = random.choices(population, weights=weights)[0]
+
+        if random.random()< probabilities["node"]:#"node": 
             self.add_node()
-        elif choice == "edge":
+        if random.random() < probabilities["edge"]:
             (i, j) = self.random_pair()
             self.add_edge(i, j, random.uniform(-self.a, self.a))
-        elif choice == "weight_perturb" or choice == "weight_set":
-            self.shift_weight(choice)
-        elif choice == "bias_perturb" or choice == "bias_set":
-            self.shift_bias(choice)
+        chance = random.random()
+        if chance < (probabilities["weight_perturb"]+probabilities["weight_set"]): #choice == "weight_perturb" or choice == "weight_set":
+            if chance < probabilities["weight_perturb"]:
+                self.shift_weight("weight_perturb")
+            else:
+                self.shift_weight("weight_set")
+        chance = random.random()
+        if chance < (probabilities["bias_perturb"]+probabilities["bias_set"]):
+            if chance < probabilities["bias_perturb"]:
+                self.shift_bias("bias_perturb")
+            else:
+                self.shift_bias("bias_set")    
         print(self._nodes.keys())
-
         
-
         self.reset()
 
     def add_node(self):
@@ -227,9 +226,6 @@ class Genome:
         2. j is not an input
         3. i != j
         """
-        # choose two random nodes 
-        # i source node (not output)
-        # j target node (not input)
         
         i = random.choice([n for n in self._nodes.keys() if not self.is_output(n)])
         j_list = [n for n in self._nodes.keys() if not self.is_input(n) and n != i]
@@ -252,7 +248,7 @@ class Genome:
 
     def is_hidden(self, n):
         """Determine if the node id is hidden."""
-        return self._unhidden <= n # TODO: double check : < self._max_node?
+        return self._unhidden <= n 
 
     def is_disabled(self):
         """Determine if all of its genes are disabled."""
@@ -311,5 +307,17 @@ class Genome:
     def get_edges_innov(self):
         """Return the enovation number of the edges"""
         return [Genome.map_edge[(i,j)] for (i,j) in self._edges.keys()]
+    
+    def disable_edge(self, i, j):
+        """Disable an edge"""
+        self._edges[(i,j)].enabled = False
+        
+    def enable_edge(self, i, j):
+        """Enable an edge"""
+        self._edges[(i,j)].enabled = True
+    
+    def get_disabled_edges(self):
+        """Return a list of disabled edges"""
+        return [(i,j) for (i,j) in self._edges.keys() if not self._edges[(i,j)].enabled]
         
     

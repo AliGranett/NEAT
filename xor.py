@@ -22,7 +22,7 @@ hyperparams = {
         'disjoint': 1.0,  # c2
         'weight': 0.4  # c3 
     },
-    "interspecies_mating_rate": 0.001,
+    "interspecies_mating": 0.001,
     "max_fitness_history": 15,  # how many generations to wait for fitness to improve before eliminating a species
     # min number of members in a species to clone champion to next generation
     "champion_population_threshold": 5,
