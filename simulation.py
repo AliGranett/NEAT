@@ -1,4 +1,4 @@
-from phenotype import NEAT, Hyperparameters
+from neat import NEAT, Hyperparameters
 from typing import Callable
 
 class Simulation:
@@ -88,4 +88,4 @@ class Simulation:
             for k in sorted(graph):
                 print(f"{k} -> {graph[k]}")
 
-        return num_hidden, num_active_connections, num_inactive_connections, self.elapsed_generations, best._fitness
+        return num_hidden, num_active_connections, len(self.ffn._species), self.elapsed_generations, best._fitness

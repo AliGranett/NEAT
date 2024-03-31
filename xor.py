@@ -4,7 +4,7 @@ import activations
 
 runs = 100
 hyperparams = {
-    "max_generations": 100,  # how many generations we run before aborting
+    "max_generations": 1000,  # how many generations we run before aborting
     "max_fitness": 3.9/4,  # target fitness for early stopping
     "default_activation": activations.sigmoid,  # 1/(1+math.exp(-x))
     "breed_probabilities": {'sexual': 0.75, 'asexual': 0.25},

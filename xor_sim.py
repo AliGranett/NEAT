@@ -1,5 +1,5 @@
 import math
-import phenotype
+import neat
 
 def fitness(expected, output):
     """Calculates the similarity score between expected and output."""
@@ -28,10 +28,10 @@ def evaluate(genome):
     return fitness([0.0, 1.0, 1.0, 0.0], [f1, f2, f3, f4])
 
 def main():
-    hyperparams = phenotype.Hyperparameters()
+    hyperparams = neat.Hyperparameters()
     hyperparams.max_generations = 300
 
-    ffn = phenotype.NEAT(2, 1, 150, hyperparams)
+    ffn = neat.NEAT(2, 1, 150, hyperparams)
     ffn.generate()
     
     print("Training...")
