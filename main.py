@@ -23,7 +23,7 @@ if __name__ == '__main__':
         hyperparams=xor.hyperparams,
         fitness_function=xor.fitness,
         eval_function=xor.evaluate,
-        verbose=False
+        verbose=True
     )
     start = time.time()
     # store results :{num_hidden, active_connections, generations_to_solution, best_fitness}

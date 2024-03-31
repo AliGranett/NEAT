@@ -19,12 +19,10 @@ class Simulation:
 
     def run_simulation(self):
         """Run the simulation, evolving the network through generations."""
-        if self.verbose:
-            print("Training...")
         self.elapsed_generations = 0
+        print("Training...")
         while self.ffn.should_evolve():
             self.ffn.evaluate_parallel(self.eval_function)
-
             # Print training progress
             current_gen = self.ffn.get_generation()
             current_best = self.ffn.get_fittest()

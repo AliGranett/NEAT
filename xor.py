@@ -18,18 +18,18 @@ hyperparams = {
         'bias_set': 0.12*0.7
     },
     "distance_weights": {
-        'edge': 1.0,  # c1
-        'weight': 1.0,  # c2
-        'bias': 0.4  # c3
+        'excess': 1.0,  # c1
+        'disjoint': 1.0,  # c2
+        'weight': 0.4  # c3 
     },
     "interspecies_mating_rate": 0.001,
     "max_fitness_history": 15,  # how many generations to wait for fitness to improve before eliminating a species
     # min number of members in a species to clone champion to next generation
     "champion_population_threshold": 5,
-    "delta_threshold": 3.0,  # threshold for speciation
+    "delta_threshold": 3.00,  # threshold for speciation
     "distributions_parameters": {
-        "uniform_range" : 2, # uniform [-a, a]
-        "gauss_std": 0.5
+        "uniform_range" : 1, # uniform [-a, a]
+        "gauss_std": 1/5
     }
 }
 

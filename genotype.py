@@ -187,8 +187,6 @@ class Genome:
             self._edges[(i, j)].enabled = True
         else:
             self._edges[(i, j)] = Edge(weight)
-            # ALI ADDED THIS TODAY
-            # map each edge to an innovation number
             if (i, j) not in Genome.map_edge.keys():
                 Genome.innov_edge += 1
                 Genome.map_edge[(i, j)] = Genome.innov_edge

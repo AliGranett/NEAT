@@ -50,7 +50,7 @@ class Specie(object):
     """
 
     def __init__(self, max_fitness_history, *members):
-        self._members = list(members)
+        self._members :list[Genome] = list(members)
         self._fitness_history = []
         self._fitness_sum = 0
         self._max_fitness_history = max_fitness_history
@@ -121,7 +121,7 @@ class NEAT(object):
         self._inputs = inputs
         self._outputs = outputs
 
-        self._species = []
+        self._species :list[Specie] = []
         self._population = population
 
         # Hyper-parameters
@@ -167,7 +167,6 @@ class NEAT(object):
                 if dist <= self._hyperparams.delta_threshold:
                     s._members.append(genome)
                     return
-
             # Doesn't fit with any other specie, create a new one
             self._species.append(Specie(
                 self._hyperparams.max_fitness_history, genome
@@ -190,11 +189,12 @@ class NEAT(object):
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
+        print(f"number of species: {len(self._species)}")
         global_fitness_sum = 0
         for s in self._species:
             s.update_fitness()
             global_fitness_sum += s._fitness_sum
-
+        
         if global_fitness_sum == 0:
             # No progress, mutate everybody
             for s in self._species:
