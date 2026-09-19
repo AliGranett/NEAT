@@ -7,6 +7,7 @@ import activations
 import itertools
 import random
 import copy
+from collections import deque
 
 
 class Edge:
@@ -76,6 +77,10 @@ class Genome:
         """
         # Minimum initial topology, no hidden layer
 
+        # Hidden ids must start past the input/output block, otherwise the
+        # first split node reuses an output's id and silently merges the two
+        Genome.node_id = max(Genome.node_id, self._unhidden - 1)
+
         # initialize nodes with default activation
         for n in range(self._max_node):
             self._nodes[n] = Node(self._default_activation)
@@ -109,15 +114,15 @@ class Genome:
         for (i, j) in self._edges:
             if not self._edges[(i, j)].enabled:
                 continue
+            if i not in self._nodes or j not in self._nodes:
+                continue
             _from[j].append(i)
 
-        ordered_nodes = itertools.chain(
-            [n for n in self._nodes.keys() if n > self._unhidden ], # a list of all node ids that are hidden
-            range(self._inputs, self._unhidden) 
-        )
-
         # Calculate output values for each node in topological order
-        for j in ordered_nodes:
+        for j in self.topological_order():
+            if self.is_input(j):
+                continue
+
             ax = 0  # Activation value
             for i in _from[j]:
                 ax += self._edges[(i, j)].weight * self._nodes[i].output
@@ -126,6 +131,83 @@ class Genome:
             node.output = node.activation(ax + node.bias)
 
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
+
+    def _kahn(self):
+        """
+        Order the nodes so that every node appears after all the nodes
+        feeding into it. Node ids reflect creation order, not depth, so a
+        hidden node may well feed one with a lower id; relying on id order
+        makes a node read a stale output from the previous forward pass.
+
+        Nodes trapped in a cycle cannot be ordered and are left out.
+        """
+        incoming = {n: 0 for n in self._nodes}
+        outgoing = {n: [] for n in self._nodes}
+
+        for (i, j) in self._edges:
+            if not self._edges[(i, j)].enabled:
+                continue
+            if i not in self._nodes or j not in self._nodes:
+                continue
+            outgoing[i].append(j)
+            incoming[j] += 1
+
+        # Seed with the nodes that have no dependencies
+        queue = deque(sorted(n for n in self._nodes if incoming[n] == 0))
+        order = []
+        while queue:
+            n = queue.popleft()
+            order.append(n)
+            for m in outgoing[n]:
+                incoming[m] -= 1
+                if incoming[m] == 0:
+                    queue.append(m)
+
+        return order
+
+    def topological_order(self):
+        """Return every node in dependency order, cycles last."""
+        order = self._kahn()
+
+        if len(order) < len(self._nodes):
+            # Only reachable for a genome built before cycles were rejected,
+            # e.g. one loaded from an old pickle. Evaluate the rest by id so
+            # the network still runs instead of silently dropping nodes.
+            placed = set(order)
+            order.extend(sorted(n for n in self._nodes if n not in placed))
+
+        return order
+
+    def ancestors(self, n):
+        """Return every node with an enabled directed path into n."""
+        _from = {}
+        for (i, j) in self._edges:
+            if not self._edges[(i, j)].enabled:
+                continue
+            _from.setdefault(j, []).append(i)
+
+        seen = set()
+        stack = list(_from.get(n, []))
+        while stack:
+            u = stack.pop()
+            if u in seen:
+                continue
+            seen.add(u)
+            stack.extend(_from.get(u, []))
+        return seen
+
+    def creates_cycle(self, i, j):
+        """
+        Determine whether enabling edge (i, j) would close a loop, which
+        would make the network recurrent and its evaluation order undefined.
+        """
+        # (i, j) closes a loop exactly when j already has a path back into i
+        return i == j or j in self.ancestors(i)
+
+    def is_feedforward(self):
+        """Determine if the enabled edges form an acyclic network."""
+        # Kahn's algorithm can only emit every node when there is no cycle
+        return len(self._kahn()) == len(self._nodes)
 
     def mutate(self, probabilities):
         """Randomly mutate the genome to initiate variation."""
@@ -140,8 +222,10 @@ class Genome:
         if (random.random() < probabilities["node"]) | (len(self._nodes.keys())==self._unhidden):#"node": 
             self.add_node()
         if random.random() < probabilities["edge"]:
-            (i, j) = self.random_pair()
-            self.add_edge(i, j, random.uniform(-self.a, self.a))
+            pair = self.random_pair()
+            if pair is not None:
+                (i, j) = pair
+                self.add_edge(i, j, random.uniform(-self.a, self.a))
         chance = random.random()
         if chance < (probabilities["weight_perturb"]+probabilities["weight_set"]): #choice == "weight_perturb" or choice == "weight_set":
             if chance < probabilities["weight_perturb"]:
@@ -187,7 +271,16 @@ class Genome:
         return new_node
 
     def add_edge(self, i, j, weight):
-        """Add a new connection between existing nodes."""
+        """
+        Add a new connection between existing nodes. Refused when it would
+        make the network recurrent; returns whether the edge was added.
+        """
+        if (i, j) in self._edges and self._edges[(i, j)].enabled:
+            return True
+
+        if self.creates_cycle(i, j):
+            return False
+
         if (i, j) in self._edges:
             self._edges[(i, j)].enabled = True
         else:
@@ -195,10 +288,14 @@ class Genome:
             if (i, j) not in Genome.map_edge.keys():
                 Genome.innov_edge += 1
                 Genome.map_edge[(i, j)] = Genome.innov_edge
+        return True
 
     def add_enabled(self):
-        """Re-enable a random disabled edge."""
-        disabled = [e for e in self._edges if not self._edges[e].enabled]
+        """Re-enable a random disabled edge that keeps the network acyclic."""
+        disabled = [
+            e for e in self._edges
+            if not self._edges[e].enabled and not self.creates_cycle(*e)
+        ]
 
         if len(disabled) > 0:
             re_enabled = random.choice(disabled)
@@ -231,18 +328,33 @@ class Genome:
         1. i is not an output
         2. j is not an input
         3. i != j
+        4. (i, j) does not close a loop, so the network stays feedforward
         """
-        
-        i = random.choice([n for n in self._nodes.keys() if not self.is_output(n)])
-        j_list = [n for n in self._nodes.keys() if not self.is_input(n) and n != i]
+        pair = self.random_acyclic_pair()
+        if pair is not None:
+            return pair
 
-        if not j_list:
-            # j = self.node_id
-            # self.add_node()
-            j = self.add_node()
-        else:
-            j = random.choice(j_list)
-        return (i, j)
+        # Every legal edge already exists, so the only way to grow the
+        # network is to split one, which also frees up new pairs.
+        self.add_node()
+        return self.random_acyclic_pair()
+
+    def random_acyclic_pair(self):
+        """Pick a legal (i, j) that keeps the network acyclic, else None."""
+        sources = [n for n in self._nodes.keys() if not self.is_output(n)]
+        random.shuffle(sources)
+
+        for i in sources:
+            # j may not be anything that already feeds i, directly or not
+            upstream = self.ancestors(i)
+            j_list = [
+                n for n in self._nodes.keys()
+                if not self.is_input(n) and n != i and n not in upstream
+            ]
+            if j_list:
+                return (i, random.choice(j_list))
+
+        return None
 
     def is_input(self, n):
         """Determine if the node id is an input."""
@@ -296,8 +408,33 @@ class Genome:
         """Create nodes from edges"""
         # extract all nodes from edges
         node_ids= set([i for (i,j)in self._edges.keys()] + [j for (i,j) in self._edges.keys()])
+        # inputs and outputs exist even when no inherited edge touches them
+        node_ids |= set(range(self._unhidden))
         for node_id in node_ids:
             self._nodes[node_id] = Node(self._default_activation)
+
+    def repair_cycles(self):
+        """
+        Disable the fewest edges needed to make the network acyclic, and
+        return them. Crossover can splice two acyclic parents into a cyclic
+        child, because each parent only guarantees its own genes are loop-free.
+        """
+        if self.is_feedforward():
+            return []
+
+        enabled = [e for e in self._edges if self._edges[e].enabled]
+        # Oldest innovations are the most established, so re-admit those first
+        enabled.sort(key=lambda e: Genome.map_edge.get(e, 0))
+        for e in enabled:
+            self._edges[e].enabled = False
+
+        removed = []
+        for e in enabled:
+            self._edges[e].enabled = True
+            if not self.is_feedforward():
+                self._edges[e].enabled = False
+                removed.append(e)
+        return removed
         
     def clone(self):
         """Return a clone of the genome.
@@ -412,6 +549,7 @@ def genomic_crossover(a:Genome, b :Genome):
             key = Genome.get_edge_key(innov)
             child._edges[key] = copy.deepcopy(fitter._edges[key])
     child.create_nodes_from_edges()
+    child.repair_cycles()
     child.reset()
     return child
  
