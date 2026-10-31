@@ -1,0 +1,4 @@
+# Runtime dependencies for the NEAT experiments.
+# The NEAT algorithm itself uses only the Python standard library;
+# pandas is used by main.py to summarise the XOR experiment results.
+pandas>=2.0
