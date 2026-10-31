@@ -1,13 +1,11 @@
-import random
-import pickle
+import copy
 import math
 import multiprocessing as mp
-import activations
-
-import itertools
+import pickle
 import random
-import copy
 from collections import deque
+
+import activations
 
 
 class Edge:
